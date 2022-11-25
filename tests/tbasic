@@ -132,6 +132,15 @@ fi
 OPENSSL_CONF=${ORIG_OPENSSL_CONF}
 rm -f ${OPENSSL_CONF}.noexport
 
+title PARA "Test key reading without PIN"
+ORIG_OPENSSL_CONF=${OPENSSL_CONF}
+sed "/pkcs11-module-token-pin.*/d" ${OPENSSL_CONF} > ${OPENSSL_CONF}.nopin
+OPENSSL_CONF=${OPENSSL_CONF}.nopin
+ossl 'pkey -in $PUBURI -pubin -pubout -out ${TSTOUT}.pub'
+ossl 'pkey -in $ECPUBURI -pubin -pubout -out ecout.pub'
+OPENSSL_CONF=${ORIG_OPENSSL_CONF}
+rm -f ${OPENSSL_CONF}.nopin
+
 title PARA "Test CSR generation from RSA private keys"
 ossl '
 req -new -batch -key "${PRIURI}" -out ${TMPPDIR}/rsa_csr.pem'
