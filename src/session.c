@@ -398,8 +398,8 @@ static CK_RV token_login(P11PROV_CTX *provctx, struct p11prov_slot *slot,
         pin = (CK_UTF8CHAR_PTR)cb_pin;
         pinlen = cb_pin_len;
     } else {
-        ret = CKR_GENERAL_ERROR;
-        goto done;
+        /* no pin available. Skip the login, but do not fail */
+        return CKR_USER_NOT_LOGGED_IN;
     }
 
     session = p11prov_session_new(provctx, slot);
@@ -448,6 +448,11 @@ static CK_RV check_slot(P11PROV_CTX *provctx, struct p11prov_slot *provslot,
     if (ret == CKR_OK
         && ((provslot->token.flags & CKF_LOGIN_REQUIRED) || reqlogin)) {
         ret = token_login(provctx, provslot, uri, pw_cb, pw_cbarg);
+        /* The LOGIN_REQUIRED does not mean the session can not be used for
+         * non-cryptographic operations such as listing keys */
+        if (ret == CKR_USER_NOT_LOGGED_IN) {
+            return CKR_OK;
+        }
     }
 
     if (ret == CKR_OK && reqlogin && !provslot->pool->login_session) {
