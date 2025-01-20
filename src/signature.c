@@ -268,6 +268,11 @@ static void p11prov_sig_freectx(void *ctx)
     }; \
     DEFINE_DER_DIGESTINFO(sha3_##bits, digestinfo_algid, bits/8)
 
+static const unsigned char der_rsa_pss_algorithm_id[] = {
+    DER_SEQUENCE, DER_RSADSI_PKCS1_LEN+5,
+        DER_OBJECT, DER_RSADSI_PKCS1_LEN+1, DER_RSADSI_PKCS1, 0x0A,
+        DER_NULL, 0
+};
 static const unsigned char der_rsa_sha1[] = {
     DER_SEQUENCE, DER_RSADSI_PKCS1_LEN+5,
         DER_OBJECT, DER_RSADSI_PKCS1_LEN+1, DER_RSADSI_PKCS1, 0x05,
@@ -1369,8 +1374,12 @@ static int p11prov_rsasig_get_ctx_params(void *ctx, OSSL_PARAM *params)
         case CKM_RSA_X_509:
             return RET_OSSL_ERR;
         case CKM_RSA_PKCS_PSS:
-            /* TODO */
-            return RET_OSSL_ERR;
+            ret = OSSL_PARAM_set_octet_string(p, der_rsa_pss_algorithm_id,
+                                              sizeof(der_rsa_pss_algorithm_id));
+            if (ret != RET_OSSL_OK) {
+                return ret;
+            }
+            break;
         }
     }
 

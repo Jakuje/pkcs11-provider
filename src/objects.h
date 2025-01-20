@@ -26,6 +26,7 @@ CK_OBJECT_CLASS p11prov_obj_get_class(P11PROV_OBJ *obj);
 CK_ATTRIBUTE *p11prov_obj_get_attr(P11PROV_OBJ *obj, CK_ATTRIBUTE_TYPE type);
 bool p11prov_obj_get_bool(P11PROV_OBJ *obj, CK_ATTRIBUTE_TYPE type, bool def);
 CK_KEY_TYPE p11prov_obj_get_key_type(P11PROV_OBJ *obj);
+char *p11prov_obj_get_ossl_key_type(P11PROV_OBJ *obj);
 CK_ULONG p11prov_obj_get_key_bit_size(P11PROV_OBJ *obj);
 CK_ULONG p11prov_obj_get_key_size(P11PROV_OBJ *obj);
 void p11prov_obj_to_store_reference(P11PROV_OBJ *obj, void **reference,

@@ -244,7 +244,6 @@ static int p11prov_store_load(void *pctx, OSSL_CALLBACK *object_cb,
     P11PROV_OBJ *obj = NULL;
     OSSL_PARAM params[4];
     int object_type;
-    CK_KEY_TYPE type;
     char *data_type;
     bool found = false;
 
@@ -357,27 +356,8 @@ static int p11prov_store_load(void *pctx, OSSL_CALLBACK *object_cb,
     case CKO_PUBLIC_KEY:
     case CKO_PRIVATE_KEY:
         object_type = OSSL_OBJECT_PKEY;
-        type = p11prov_obj_get_key_type(obj);
-        switch (type) {
-        case CKK_RSA:
-            data_type = (char *)P11PROV_NAME_RSA;
-            break;
-        case CKK_EC:
-            data_type = (char *)P11PROV_NAME_EC;
-            break;
-        case CKK_EC_EDWARDS:
-            switch (p11prov_obj_get_key_bit_size(obj)) {
-            case ED448_BIT_SIZE:
-                data_type = (char *)ED448;
-                break;
-            case ED25519_BIT_SIZE:
-                data_type = (char *)ED25519;
-                break;
-            default:
-                return RET_OSSL_ERR;
-            }
-            break;
-        default:
+        data_type = p11prov_obj_get_ossl_key_type(obj);
+        if (data_type == NULL) {
             return RET_OSSL_ERR;
         }
         p11prov_obj_to_store_reference(obj, &reference, &reference_sz);
