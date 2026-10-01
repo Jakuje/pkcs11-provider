@@ -613,6 +613,7 @@ struct uri_components {
     size_t attrlen;
     int (*handler)(P11PROV_CTX *, const char *, size_t, void **);
     void **output;
+    bool set;
 };
 
 P11PROV_URI *p11prov_parse_uri(P11PROV_CTX *ctx, const char *uri)
@@ -674,12 +675,23 @@ P11PROV_URI *p11prov_parse_uri(P11PROV_CTX *ctx, const char *uri)
         for (int i = 0; ucmap[i].attr != NULL; i++) {
             if (strncmp(p, ucmap[i].attr, ucmap[i].attrlen) == 0
                 && p[ucmap[i].attrlen] == '=') {
+                for (int j = 0; ucmap[j].attr != NULL; j++) {
+                    if (ucmap[j].set && ucmap[j].output == ucmap[i].output) {
+                        P11PROV_raise(ctx, CKR_ARGUMENTS_BAD,
+                                      "Duplicate attribute [%.*s] in URI",
+                                      (int)ucmap[i].attrlen, ucmap[i].attr);
+                        ret = EINVAL;
+                        goto done;
+                    }
+                }
+
                 p += ucmap[i].attrlen + 1;
                 len -= ucmap[i].attrlen + 1;
                 ret = ucmap[i].handler(ctx, p, len, ucmap[i].output);
                 if (ret != 0) {
                     goto done;
                 }
+                ucmap[i].set = true;
                 break;
             }
         }
@@ -698,11 +710,10 @@ done:
         mu = OPENSSL_malloc(sizeof(struct p11prov_uri));
         if (mu) {
             *mu = u;
-        } else {
-            p11prov_uri_free_int(&u);
+            return mu;
         }
-        return mu;
     }
+    p11prov_uri_free_int(&u);
     return NULL;
 }
 
